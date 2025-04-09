@@ -19,24 +19,10 @@
       width: 60%;
       margin: 0 auto;
       height: 20px;
-      background-color: #ccc;
+      background-color: transparent;
       border-radius: 5px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background-color: #1E90FF;
-      transition: width 0.1s ease;
-    }
-
-    /* segmented container as flex */
-    .bar-container.segmented {
       display: flex;
       gap: 4px;
-      background-color: transparent;
     }
 
     .segment {
@@ -55,89 +41,64 @@
       height: 100%;
       width: 0%;
       background-color: #1E90FF;
-      transition: width 0.1s ease;
-    }
-
-    .done-message {
-      margin-top: 30px;
-      font-size: 18px;
-    }
-
-    .keyword {
-      color: red;
-      font-weight: bold;
+      transition: width 0.1s linear;
     }
   </style>
 </head>
 <body>
 
-  <div class="loading-text">关键词正在加载中：</div>
+  <div class="loading-text">正在排队中</div>
   <div id="barArea"></div>
 
-  <div class="done-message" id="doneMessage" style="display: none;">
-    您的关键词是：<span class="keyword">红色</span>
-  </div>
-
   <script>
-    const formatType = 'segmented'; // 'solid' or 'segmented'
-    const duration = 15000; // 总时长（毫秒）
-    const barArea = document.getElementById('barArea');
-    const doneMessage = document.getElementById('doneMessage');
+    const totalSegments = 10;          // 10 段
+    const totalDuration = 40000;       // 总时长 40 秒
+    const targetProgress = 0.3;        // ✅ 改为 30%
+    const totalFillWidth = totalSegments * 100;
+    const targetWidth = totalFillWidth * targetProgress;
 
-    if (formatType === 'solid') {
-      // 连续进度条
-      barArea.innerHTML = `
-        <div class="bar-container">
-          <div class="progress-fill" id="fillBar"></div>
-        </div>
-      `;
-      const fill = document.getElementById('fillBar');
-      let startTime = Date.now();
-      const interval = setInterval(() => {
-        let percent = Math.min((Date.now() - startTime) / duration * 100, 100);
-        fill.style.width = percent + '%';
-        if (percent >= 100) {
-          clearInterval(interval);
-          doneMessage.style.display = 'block';
-        }
-      }, 50);
+    const barArea = document.getElementById('barArea');
+    barArea.innerHTML = `<div class="bar-container" id="segmentedBar"></div>`;
+    const segmentedBar = document.getElementById('segmentedBar');
+
+    const fills = [];
+    for (let i = 0; i < totalSegments; i++) {
+      const seg = document.createElement('div');
+      seg.classList.add('segment');
+      const fill = document.createElement('div');
+      fill.classList.add('segment-fill');
+      seg.appendChild(fill);
+      segmentedBar.appendChild(seg);
+      fills.push(fill);
     }
 
-    if (formatType === 'segmented') {
-      // 分段式进度条，动态推进每一段
-      const segmentsCount = 4;
-      barArea.innerHTML = `<div class="bar-container segmented" id="segmentedBar"></div>`;
-      const segmentedBar = document.getElementById('segmentedBar');
+    let filled = 0;
+    const intervalTime = 50;
+    const steps = totalDuration / intervalTime;
+    const fillPerStep = targetWidth / steps;
 
-      for (let i = 0; i < segmentsCount; i++) {
-        const seg = document.createElement('div');
-        seg.classList.add('segment');
-        const fill = document.createElement('div');
-        fill.classList.add('segment-fill');
-        seg.appendChild(fill);
-        segmentedBar.appendChild(seg);
+    const interval = setInterval(() => {
+      filled += fillPerStep;
+      const currentSegment = Math.floor(filled / 100);
+      const currentWidthInSegment = filled % 100;
+
+      for (let i = 0; i < totalSegments; i++) {
+        if (i < currentSegment) {
+          fills[i].style.width = '100%';
+        } else if (i === currentSegment) {
+          fills[i].style.width = `${Math.min(currentWidthInSegment, 100)}%`;
+        } else {
+          fills[i].style.width = '0%';
+        }
       }
 
-      const segmentFills = document.querySelectorAll('.segment-fill');
-      let currentSegment = 0;
-      const segmentDuration = duration / segmentsCount;
-      let segmentStart = Date.now();
-
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - segmentStart;
-        const percent = Math.min(elapsed / segmentDuration * 100, 100);
-        segmentFills[currentSegment].style.width = percent + '%';
-
-        if (percent >= 100) {
-          currentSegment++;
-          segmentStart = Date.now();
-          if (currentSegment >= segmentsCount) {
-            clearInterval(interval);
-            doneMessage.style.display = 'block';
-          }
-        }
-      }, 50);
-    }
+      if (filled >= targetWidth) {
+        clearInterval(interval);
+        setTimeout(() => {
+          alert('您对本网站的使用感受如何？请返回问卷界面回答相应问题。');
+        }, 200);
+      }
+    }, intervalTime);
   </script>
 </body>
 </html>
