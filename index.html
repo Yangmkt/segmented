@@ -52,10 +52,10 @@
 
   <script>
     const totalSegments = 3;          // 3 段
-    const totalDuration = 10000;       // 总时长 10 秒
-    const targetProgress = 0.3;        // ✅ 改为 30%
-    const totalFillWidth = totalSegments * 100;
-    const targetWidth = totalFillWidth * targetProgress;
+    const totalDuration = 40000;       // 总时长 40 秒
+    const targetProgress = 0.3;        // ✅ 目标加载 30% 进度
+    const totalFillWidth = totalSegments * 100; // 每段的宽度
+    const targetWidth = totalFillWidth * targetProgress; // 目标宽度
 
     const barArea = document.getElementById('barArea');
     barArea.innerHTML = `<div class="bar-container" id="segmentedBar"></div>`;
@@ -73,15 +73,16 @@
     }
 
     let filled = 0;
-    const intervalTime = 50;
-    const steps = totalDuration / intervalTime;
-    const fillPerStep = targetWidth / steps;
+    const intervalTime = 50; // 每 50 毫秒更新一次
+    const steps = totalDuration / intervalTime; // 总的更新次数
+    const fillPerStep = totalFillWidth / steps; // 每步填充的宽度
 
     const interval = setInterval(() => {
-      filled += fillPerStep;
-      const currentSegment = Math.floor(filled / 100);
-      const currentWidthInSegment = filled % 100;
+      filled += fillPerStep; // 更新已填充的宽度
+      const currentSegment = Math.floor(filled / 100); // 当前分块的索引
+      const currentWidthInSegment = filled % 100; // 当前分块内的宽度
 
+      // 更新每个分块的填充状态
       for (let i = 0; i < totalSegments; i++) {
         if (i < currentSegment) {
           fills[i].style.width = '100%';
@@ -92,6 +93,7 @@
         }
       }
 
+      // 如果填充达到目标宽度，停止进度条
       if (filled >= targetWidth) {
         clearInterval(interval);
         setTimeout(() => {
